@@ -126,11 +126,11 @@ static int cpufreq_thermal_notifier(struct notifier_block *nb,
 	unsigned long clipped_freq = ULONG_MAX, floor_freq = 0;
 	struct cpufreq_cooling_device *cpufreq_cdev;
 
-	if (event != CPUFREQ_INCOMPATIBLE)
+	if (event != CPUFREQ_ADJUST)
 		return NOTIFY_DONE;
 
 	mutex_lock(&cooling_list_lock);
-	list_for_each_entry(cpufreq_cdev, &cpufreq_cdev_list, node) {
+	list_for_each_entry (cpufreq_cdev, &cpufreq_cdev_list, node) {
 		/*
 		 * A new copy of the policy is sent to the notifier and can't
 		 * compare that directly.
@@ -156,7 +156,7 @@ static int cpufreq_thermal_notifier(struct notifier_block *nb,
 		floor_freq = cpufreq_cdev->floor_freq;
 		if (policy->max > clipped_freq || policy->min < floor_freq)
 			cpufreq_verify_within_limits(policy, floor_freq,
-							clipped_freq);
+						     clipped_freq);
 		break;
 	}
 
@@ -185,7 +185,6 @@ static unsigned long get_level(struct cpufreq_cooling_device *cpufreq_cdev,
 
 	return cpufreq_cdev->max_level - i - 1;
 }
-
 
 static u32 cpu_freq_to_power(struct cpufreq_cooling_device *cpufreq_cdev,
 			     u32 freq)
@@ -324,7 +323,7 @@ static int cpufreq_get_cur_state(struct thermal_cooling_device *cdev,
 }
 
 static unsigned int get_state_freq(struct cpufreq_cooling_device *cpufreq_cdev,
-			      unsigned long state)
+				   unsigned long state)
 {
 	struct cpufreq_policy *policy;
 	unsigned long idx;
@@ -379,8 +378,7 @@ static int cpufreq_set_min_state(struct thermal_cooling_device *cdev,
 	 * can handle the CPU freq mitigation, if not, notify cpufreq
 	 * framework.
 	 */
-	if (cpufreq_cdev->plat_ops &&
-		cpufreq_cdev->plat_ops->floor_limit)
+	if (cpufreq_cdev->plat_ops && cpufreq_cdev->plat_ops->floor_limit)
 		cpufreq_cdev->plat_ops->floor_limit(cpu, floor_freq);
 	else
 		cpufreq_update_policy(cpu);
@@ -420,10 +418,9 @@ static int cpufreq_set_cur_state(struct thermal_cooling_device *cdev,
 	 * can handle the CPU freq mitigation, if not, notify cpufreq
 	 * framework.
 	 */
-	if (cpufreq_cdev->plat_ops &&
-		cpufreq_cdev->plat_ops->ceil_limit)
+	if (cpufreq_cdev->plat_ops && cpufreq_cdev->plat_ops->ceil_limit)
 		cpufreq_cdev->plat_ops->ceil_limit(cpufreq_cdev->policy->cpu,
-							clip_freq);
+						   clip_freq);
 	else
 		cpufreq_update_policy(cpufreq_cdev->policy->cpu);
 
@@ -473,7 +470,7 @@ static int cpufreq_get_requested_power(struct thermal_cooling_device *cdev,
 		load_cpu = kcalloc(ncpus, sizeof(*load_cpu), GFP_KERNEL);
 	}
 
-	for_each_cpu(cpu, policy->related_cpus) {
+	for_each_cpu (cpu, policy->related_cpus) {
 		u32 load;
 
 		if (cpu_online(cpu))
@@ -579,14 +576,14 @@ static int cpufreq_power2state(struct thermal_cooling_device *cdev,
 }
 
 static struct thermal_cooling_device_ops cpufreq_power_cooling_ops = {
-	.get_max_state		= cpufreq_get_max_state,
-	.get_cur_state		= cpufreq_get_cur_state,
-	.set_cur_state		= cpufreq_set_cur_state,
-	.set_min_state		= cpufreq_set_min_state,
-	.get_min_state		= cpufreq_get_min_state,
-	.get_requested_power	= cpufreq_get_requested_power,
-	.state2power		= cpufreq_state2power,
-	.power2state		= cpufreq_power2state,
+	.get_max_state = cpufreq_get_max_state,
+	.get_cur_state = cpufreq_get_cur_state,
+	.set_cur_state = cpufreq_set_cur_state,
+	.set_min_state = cpufreq_set_min_state,
+	.get_min_state = cpufreq_get_min_state,
+	.get_requested_power = cpufreq_get_requested_power,
+	.state2power = cpufreq_state2power,
+	.power2state = cpufreq_power2state,
 };
 #endif
 
@@ -625,8 +622,8 @@ static struct notifier_block thermal_cpufreq_notifier_block = {
  */
 static struct thermal_cooling_device *
 __cpufreq_cooling_register(struct device_node *np,
-			struct cpufreq_policy *policy, bool try_model,
-			struct cpu_cooling_ops *plat_ops)
+			   struct cpufreq_policy *policy, bool try_model,
+			   struct cpu_cooling_ops *plat_ops)
 {
 	struct thermal_cooling_device *cdev;
 	struct cpufreq_cooling_device *cpufreq_cdev;
@@ -636,14 +633,16 @@ __cpufreq_cooling_register(struct device_node *np,
 	bool first;
 
 	if (IS_ERR_OR_NULL(policy)) {
-		pr_err("%s: cpufreq policy isn't valid: %p\n", __func__, policy);
+		pr_err("%s: cpufreq policy isn't valid: %p\n", __func__,
+		       policy);
 		return ERR_PTR(-EINVAL);
 	}
 
 	i = cpufreq_table_count_valid_entries(policy);
 	if (!i) {
-		pr_debug("%s: CPUFreq table not found or has no valid entries\n",
-			 __func__);
+		pr_debug(
+			"%s: CPUFreq table not found or has no valid entries\n",
+			__func__);
 		return ERR_PTR(-ENODEV);
 	}
 
@@ -653,9 +652,8 @@ __cpufreq_cooling_register(struct device_node *np,
 
 	cpufreq_cdev->policy = policy;
 	num_cpus = cpumask_weight(policy->related_cpus);
-	cpufreq_cdev->idle_time = kcalloc(num_cpus,
-					 sizeof(*cpufreq_cdev->idle_time),
-					 GFP_KERNEL);
+	cpufreq_cdev->idle_time =
+		kcalloc(num_cpus, sizeof(*cpufreq_cdev->idle_time), GFP_KERNEL);
 	if (!cpufreq_cdev->idle_time) {
 		cdev = ERR_PTR(-ENOMEM);
 		goto free_cdev;
@@ -691,8 +689,8 @@ __cpufreq_cooling_register(struct device_node *np,
 		goto free_idle_time;
 
 	cpufreq_cdev->clipped_freq = get_state_freq(cpufreq_cdev, 0);
-	cpufreq_cdev->floor_freq = get_state_freq(cpufreq_cdev,
-					cpufreq_cdev->max_level);
+	cpufreq_cdev->floor_freq =
+		get_state_freq(cpufreq_cdev, cpufreq_cdev->max_level);
 	cpufreq_cdev->cpufreq_floor_state = cpufreq_cdev->max_level;
 	cpufreq_cdev->cdev = cdev;
 
@@ -791,7 +789,7 @@ EXPORT_SYMBOL_GPL(of_cpufreq_cooling_register);
  */
 struct thermal_cooling_device *
 cpufreq_platform_cooling_register(struct cpufreq_policy *policy,
-				struct cpu_cooling_ops *plat_ops)
+				  struct cpu_cooling_ops *plat_ops)
 {
 	struct device_node *cpu_node = NULL;
 	u32 capacitance = 0;
@@ -807,7 +805,7 @@ cpufreq_platform_cooling_register(struct cpufreq_policy *policy,
 				     &capacitance);
 
 		cdev = __cpufreq_cooling_register(cpu_node, policy, capacitance,
-							plat_ops);
+						  plat_ops);
 		if (IS_ERR(cdev))
 			pr_err("cpu_cooling: cpu%d cooling device err: %ld\n",
 			       policy->cpu, PTR_ERR(cdev));
@@ -843,8 +841,8 @@ void cpufreq_cooling_unregister(struct thermal_cooling_device *cdev)
 	if (last) {
 		if (!cpufreq_cdev->plat_ops)
 			cpufreq_unregister_notifier(
-					&thermal_cpufreq_notifier_block,
-					CPUFREQ_POLICY_NOTIFIER);
+				&thermal_cpufreq_notifier_block,
+				CPUFREQ_POLICY_NOTIFIER);
 	}
 
 	thermal_cooling_device_unregister(cpufreq_cdev->cdev);
