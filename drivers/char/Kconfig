@@ -561,6 +561,7 @@ config TILE_SROM
 
 source "drivers/char/xillybus/Kconfig"
 source "drivers/char/diag/Kconfig"
+source "drivers/char/lrng/Kconfig"
 
 config MSM_FASTCVPD
 	tristate "QTI FASTCVP driver"
