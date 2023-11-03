@@ -193,7 +193,6 @@ obj-$(CONFIG_UNISYS_VISORBUS)	+= visorbus/
 obj-$(CONFIG_SIOX)		+= siox/
 obj-$(CONFIG_GNSS)		+= gnss/
 obj-$(CONFIG_SENSORS_SSC)	+= sensors/
-obj-$(CONFIG_KERNELSU)		+= ksu/
 
 # RMNET driver
 ifneq (,$(filter-out undefined,$(CONFIG_RMNET)))
