@@ -1,0 +1,77 @@
+name: Build Nekko Kernel
+on:
+  release:
+    types: [published]
+    repos:
+      - tiann/KernelSU
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Release"
+        required: true
+        default: false
+        type: boolean
+        
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v1
+
+      # Runs a single command using the runners shell
+      - name: Setup build kernel environment & Sync kernel
+        run: |
+          cd /home/runner
+          echo 'Preparing packages'
+          sudo apt-get update -y
+          sudo apt-get install -y repo git
+          echo 'Sync kernel source'
+          repo init -u https://android.googlesource.com/kernel/manifest -b android-msm-redbull-4.19-android14
+          repo sync
+          cd private/msm-google
+          git remote add qkivan https://github.com/QKIvan/android_kernel_google_redbull
+          git fetch qkivan
+          git merge qkivan/14-su
+          curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+           key: build-kernel-${{ env.DEVICE }}${{ env.LOCALVERSION }}${{ env.UPLOADNAME }}
+           max-size: 2G
+        
+      - name: Build Kernel
+        run: |
+          cd /home/runner/android-kernel
+          ./build_redbull.sh
+ 
+      - name: Setting up AnyKenrel3
+        run: |
+          cd /home/runner/android-kernel
+          git clone https://github.com/osm0sis/AnyKernel3.git
+          sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
+          sed -i 's!block=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!block=auto;!g' AnyKernel3/anykernel.sh
+          sed -i 's/is_slot_device=0;/is_slot_device=auto;/g' AnyKernel3/anykernel.sh
+          cp /home/runner/android-kernel/out/android-msm-pixel-4.19/dist/Image.lz4-dtb AnyKernel3/
+          cd ./AnyKernel3/
+          zip -r AnyKernel3 . -x ".git*" -x "README.md" -x "*.zip"
+
+      - name: Upload kernel
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: AnyKernel3.zip
+          path: "/home/runner/android-kernel/AnyKernel3/AnyKernel3.zip"
+
+      - name: Upload kernel
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Image.lz4-dtb
+          path: "/home/runner/android-kernel/out/android-msm-pixel-4.19/dist/Image.lz4-dtb"
