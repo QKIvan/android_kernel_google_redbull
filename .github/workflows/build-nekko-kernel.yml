@@ -32,6 +32,8 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y repo git
           echo 'Sync kernel source'
+          mkdir android-kernel
+          cd android-kernel
           repo init -u https://android.googlesource.com/kernel/manifest -b android-msm-redbull-4.19-android14
           repo sync
           cd private/msm-google
