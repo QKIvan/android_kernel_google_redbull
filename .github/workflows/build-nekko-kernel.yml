@@ -51,7 +51,7 @@ jobs:
       - name: Build Kernel
         run: |
           cd /home/runner/android-kernel
-          ./build_redbull.sh
+          ./build_redbull-gki.sh
  
       - name: Setting up AnyKenrel3
         run: |
