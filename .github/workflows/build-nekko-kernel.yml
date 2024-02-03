@@ -2,15 +2,10 @@ name: Build Nekko Kernel
 on:
   release:
     types: [published]
-    repos:
-      - tiann/KernelSU
   workflow_dispatch:
-    inputs:
-      release:
-        description: "Release"
-        required: true
-        default: false
-        type: boolean
+
+env:
+  TZ: Asia/Shanghai
         
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -27,6 +22,7 @@ jobs:
       # Runs a single command using the runners shell
       - name: Setup build kernel environment & Sync kernel
         run: |
+          sudo timedatectl set-timezone "$TZ"
           cd /home/runner
           echo 'Preparing packages'
           sudo apt-get update -y
@@ -51,7 +47,7 @@ jobs:
       - name: Build Kernel
         run: |
           cd /home/runner/android-kernel
-          ./build_redbull-gki.sh
+          ./build_redbull.sh
  
       - name: Setting up AnyKenrel3
         run: |
@@ -77,3 +73,24 @@ jobs:
         with:
           name: Image.lz4-dtb
           path: "/home/runner/android-kernel/out/android-msm-pixel-4.19/dist/Image.lz4-dtb"
+
+      - name: Generate release tag
+        id: tag
+        if: success()
+        run: |
+          echo "release_tag=Nekko-$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Upload kernel and AK3 to Releases
+        uses: softprops/action-gh-release@v1
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.tag.outputs.release_tag }}
+          files: |
+            /home/runner/android-kernel/out/android-msm-pixel-4.19/dist/Image.lz4-dtb
+            /home/runner/android-kernel/AnyKernel3/AnyKernel3.zip
+            /home/runner/android-kernel/out/android-msm-pixel-4.19/dist/boot.img
+            /home/runner/android-kernel/out/android-msm-pixel-4.19/dist/vendor_boot.img
+            /home/runner/android-kernel/out/android-msm-pixel-4.19/dist/dtbo.img
