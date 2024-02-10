@@ -40,7 +40,7 @@ jobs:
           echo "CONFIG_HAVE_KPROBES=y" >> arch/arm64/configs/redbull-gki_defconfig
           echo "CONFIG_KPROBE_EVENTS=y" >> arch/arm64/configs/redbull-gki_defconfig
           echo "CONFIG_OVERLAY_FS=y" >> arch/arm64/configs/redbull-gki_defconfig
-          make ARCH=arm64 redbull_defconfig
+          make ARCH=arm64 redbull-gki_defconfig
           make ARCH=arm64 savedefconfig
           cp defconfig arch/arm64/configs/redbull-gki_defconfig
           make mrproper
