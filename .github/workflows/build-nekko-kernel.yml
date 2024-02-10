@@ -45,7 +45,7 @@ jobs:
           cp defconfig arch/arm64/configs/redbull-gki_defconfig
           make mrproper
           curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
-  
+
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
