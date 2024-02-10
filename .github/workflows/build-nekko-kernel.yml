@@ -32,12 +32,20 @@ jobs:
           cd android-kernel
           repo init -u https://android.googlesource.com/kernel/manifest -b android-msm-redbull-4.19-android14
           repo sync
-          cd private/msm-google
-          git remote add qkivan https://github.com/QKIvan/android_kernel_google_redbull
-          git fetch qkivan
-          git merge qkivan/14-su
-          curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
 
+      - name: Setup Configuration for Kernel
+          cd private/msm-google
+          echo "CONFIG_MODULES=y" >> arch/arm64/configs/redbull-gki_defconfig
+          echo "CONFIG_KPROBES=y" >> arch/arm64/configs/redbull-gki_defconfig
+          echo "CONFIG_HAVE_KPROBES=y" >> arch/arm64/configs/redbull-gki_defconfig
+          echo "CONFIG_KPROBE_EVENTS=y" >> arch/arm64/configs/redbull-gki_defconfig
+          echo "CONFIG_OVERLAY_FS=y" >> arch/arm64/configs/redbull-gki_defconfig
+          make ARCH=arm64 redbull_defconfig
+          make ARCH=arm64 savedefconfig
+          cp defconfig arch/arm64/configs/redbull-gki_defconfig
+          make mrproper
+          curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
+  
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
@@ -47,7 +55,7 @@ jobs:
       - name: Build Kernel
         run: |
           cd /home/runner/android-kernel
-          ./build_redbull.sh
+          ./build_redbull-gki.sh
  
       - name: Setting up AnyKenrel3
         run: |
@@ -60,14 +68,14 @@ jobs:
           cd ./AnyKernel3/
           zip -r AnyKernel3 . -x ".git*" -x "README.md" -x "*.zip"
 
-      - name: Upload kernel
+      - name: Upload AK3
         if: success()
         uses: actions/upload-artifact@v3
         with:
           name: AnyKernel3.zip
           path: "/home/runner/android-kernel/AnyKernel3/AnyKernel3.zip"
 
-      - name: Upload kernel
+      - name: Upload Image.lz4-dtb
         if: success()
         uses: actions/upload-artifact@v3
         with:
@@ -91,6 +99,3 @@ jobs:
           files: |
             /home/runner/android-kernel/out/android-msm-pixel-4.19/dist/Image.lz4-dtb
             /home/runner/android-kernel/AnyKernel3/AnyKernel3.zip
-            /home/runner/android-kernel/out/android-msm-pixel-4.19/dist/boot.img
-            /home/runner/android-kernel/out/android-msm-pixel-4.19/dist/vendor_boot.img
-            /home/runner/android-kernel/out/android-msm-pixel-4.19/dist/dtbo.img
