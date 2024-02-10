@@ -27,14 +27,9 @@ jobs:
           echo 'Preparing packages'
           sudo apt-get update -y
           sudo apt-get install -y repo git
-          echo 'Sync kernel source'
-          mkdir android-kernel
-          cd android-kernel
-          repo init -u https://android.googlesource.com/kernel/manifest -b android-msm-redbull-4.19-android14
+          mkdir android-kernel && cd android-kernel
+          repo init -u https://android.googlesource.com/kernel/manifest -b android-msm-redbull-4.19-android14-qpr1
           repo sync
-
-      - name: Setup Configuration for Kernel
-        run: |
           cd private/msm-google
           echo "CONFIG_MODULES=y" >> arch/arm64/configs/redbull-gki_defconfig
           echo "CONFIG_KPROBES=y" >> arch/arm64/configs/redbull-gki_defconfig
