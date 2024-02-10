@@ -34,6 +34,7 @@ jobs:
           repo sync
 
       - name: Setup Configuration for Kernel
+        run: |
           cd private/msm-google
           echo "CONFIG_MODULES=y" >> arch/arm64/configs/redbull-gki_defconfig
           echo "CONFIG_KPROBES=y" >> arch/arm64/configs/redbull-gki_defconfig
