@@ -107,6 +107,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          body: 'THIS IS A AUTO BUILD FROM GITHUB ACTIONS.THIS BUILD ONLY FOR TEST.BACKUP YOUR DATA BEFORE YOU FLASH IT!!!!!'
           tag_name: ${{ steps.tag.outputs.release_tag }}
           files: |
             /home/runner/android-kernel/out/android-msm-pixel-4.19/dist/Image.lz4-dtb
