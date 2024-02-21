@@ -102,7 +102,7 @@ jobs:
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Upload kernel and AK3 to Releases
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@master
         if: success()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
