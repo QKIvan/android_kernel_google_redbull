@@ -47,11 +47,9 @@ jobs:
           repo init -u https://android.googlesource.com/kernel/manifest -b android-msm-redbull-4.19-android14-qpr1
           repo sync
           cd private/msm-google
-          echo "CONFIG_MODULES=y" >> arch/arm64/configs/redbull-gki_defconfig
           echo "CONFIG_KPROBES=y" >> arch/arm64/configs/redbull-gki_defconfig
           echo "CONFIG_HAVE_KPROBES=y" >> arch/arm64/configs/redbull-gki_defconfig
           echo "CONFIG_KPROBE_EVENTS=y" >> arch/arm64/configs/redbull-gki_defconfig
-          echo "CONFIG_OVERLAY_FS=y" >> arch/arm64/configs/redbull-gki_defconfig
           make ARCH=arm64 redbull-gki_defconfig
           make ARCH=arm64 savedefconfig
           cp defconfig arch/arm64/configs/redbull-gki_defconfig
