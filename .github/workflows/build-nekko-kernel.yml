@@ -3,31 +3,18 @@ on:
   release:
     types: [published]
   workflow_dispatch:
-
-env:
-  TZ: Asia/Shanghai
         
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
-      - name: Free Disk Space (Ubuntu)
+      - name: Remove unused packages
         uses: jlumbroso/free-disk-space@main
         with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
           tool-cache: ture
-        
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
           android: false
           dotnet: true
           haskell: true
@@ -35,27 +22,22 @@ jobs:
           docker-images: true
           swap-storage: true
 
-      # Runs a single command using the runners shell
       - name: Setup build kernel environment & Sync kernel
         run: |
-          sudo timedatectl set-timezone "$TZ"
           cd /home/runner
-          echo 'Preparing packages'
           sudo apt-get update -y
           sudo apt-get install -y repo git
+          git config --global user.email "CI@github-example.com"
+          git config --global user.name "Github-CI"
           mkdir android-kernel && cd android-kernel
           repo init -u https://android.googlesource.com/kernel/manifest -b android-msm-redbull-4.19-android14-qpr1
           repo sync
           cd private/msm-google
-          echo "CONFIG_MODULES=y" >> arch/arm64/configs/redbull-gki_defconfig
-          echo "CONFIG_KPROBES=y" >> arch/arm64/configs/redbull-gki_defconfig
-          echo "CONFIG_HAVE_KPROBES=y" >> arch/arm64/configs/redbull-gki_defconfig
-          echo "CONFIG_KPROBE_EVENTS=y" >> arch/arm64/configs/redbull-gki_defconfig
-          echo "CONFIG_OVERLAY_FS=y" >> arch/arm64/configs/redbull-gki_defconfig
-          make ARCH=arm64 redbull-gki_defconfig
-          make ARCH=arm64 savedefconfig
-          cp defconfig arch/arm64/configs/redbull-gki_defconfig
-          make mrproper
+          git remote add qk https://github.com/QKIvan/android_kernel_google_redbull
+          git fetch qk
+          git merge qk/Umaru
+          wget https://raw.githubusercontent.com/xiaoleGun/KernelSU_Action/main/patches/patches.sh
+          bash patches.sh
           curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
 
       - name: Setup ccache
@@ -67,7 +49,7 @@ jobs:
       - name: Build Kernel
         run: |
           cd /home/runner/android-kernel
-          ./build_redbull-gki.sh
+          ./build_redbull.sh
  
       - name: Setting up AnyKenrel3
         run: |
@@ -101,7 +83,7 @@ jobs:
           echo "release_tag=Nekko-$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
           echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Upload kernel and AK3 to Releases
+      - name: Upload kernel and AK3 to Github Release
         uses: softprops/action-gh-release@master
         if: success()
         env:
