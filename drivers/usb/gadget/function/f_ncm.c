@@ -1594,17 +1594,18 @@ static int ncm_bind(struct usb_configuration *c, struct usb_function *f)
 	return 0;
 
 fail:
-	kfree(f->os_desc_table);
-	f->os_desc_n = 0;
-
 	if (ncm->notify_req) {
 		kfree(ncm->notify_req->buf);
 		usb_ep_free_request(ncm->notify, ncm->notify_req);
 	}
+
 netdev_cleanup:
 	gether_cleanup(netdev_priv(ncm_opts->net));
 
 error:
+	kfree(f->os_desc_table);
+	f->os_desc_n = 0;
+
 	ERROR(cdev, "%s: can't bind, err %d\n", f->name, status);
 
 	return status;
