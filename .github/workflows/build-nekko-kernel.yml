@@ -37,8 +37,13 @@ jobs:
           git fetch qk
           git merge qk/Umaru
           wget https://raw.githubusercontent.com/xiaoleGun/KernelSU_Action/main/patches/patches.sh
-          bash patches.sh
           curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
+          bash patches.sh
+          echo "CONFIG_KSU=y" >> arch/arm64/configs/redbull_defconfig
+          make ARCH=arm64 redbull_defconfig
+          make ARCH=arm64 savedefconfig
+          cp defconfig arch/arm64/configs/redbull_defconfig
+          make mrproper
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
